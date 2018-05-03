@@ -7,6 +7,7 @@ import com.service.ReimbursementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,7 +43,9 @@ public class ReimbursementController {
         responseBean.setStatus(HttpStatus.NOT_FOUND.toString());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBean);
     }
+
     @GetMapping("/all/approved")
+    @Secured({"Financer" })
     ResponseEntity<ResponseBean> getAllApprovedReimbursement() {
         List<Reimbursement> reimbursementList = reimbursementService.getAllApprovedApplications();
         ResponseBean responseBean = new ResponseBean();
@@ -57,6 +60,7 @@ public class ReimbursementController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBean);
     }
     @GetMapping("/all/unapproved")
+    @Secured({ "Approver", "Financer" })
     ResponseEntity<ResponseBean> getAllUnapprovedReimbursement() {
         List<Reimbursement> reimbursementList = reimbursementService.getAllUnapprovedApplications();
         ResponseBean responseBean = new ResponseBean();
@@ -72,6 +76,7 @@ public class ReimbursementController {
     }
 
     @GetMapping("/all/completed")
+    @Secured({ "Financer" })
     ResponseEntity<ResponseBean> getAllCompletedReimbursement() {
         List<Reimbursement> reimbursementList = reimbursementService.getAllCompletedApplications();
         ResponseBean responseBean = new ResponseBean();
@@ -102,13 +107,15 @@ public class ReimbursementController {
     }
 
     @PostMapping("/approve")
+    @Secured({ "Approver", "Financer" })
     ResponseEntity<ResponseBean> updateStatusForApprover(@RequestBody Reimbursement reimbursement) {
-        Reimbursement savedReimbursement = reimbursementService.updateStatus(reimbursement.getStatus(),reimbursement.getReimbursementId());
+        int i = reimbursementService.updateStatus(reimbursement.getStatus(),reimbursement.getReimbursementId());
         ResponseBean responseBean = new ResponseBean();
-        if (savedReimbursement != null) {
-            responseBean.setData(savedReimbursement);
-            if(savedReimbursement.getReimbursementCategory()=="Approved"){
-                emailSenderService.sendMail("your form is approved",reimbursement);
+        if (i != 0) {
+            Reimbursement savedReimbursement = reimbursementService.getReimbursementById(reimbursement.getReimbursementId());
+            responseBean.setData(reimbursement);
+            if(savedReimbursement!=null && savedReimbursement.getReimbursementCategory()=="Approved"){
+                emailSenderService.sendMail("your form is approved",savedReimbursement);
             }
             responseBean.setMessage("data saved successfully");
             responseBean.setStatus(HttpStatus.CREATED.toString());
@@ -120,13 +127,15 @@ public class ReimbursementController {
     }
 
     @PostMapping("/complete")
+    @Secured({ "Financer" })
     ResponseEntity<ResponseBean> updateStatusForFinancer(@RequestBody Reimbursement reimbursement) {
-        Reimbursement savedReimbursement = reimbursementService.updateStatus(reimbursement.getStatus(),reimbursement.getReimbursementId());
+        int i = reimbursementService.updateStatus(reimbursement.getStatus(),reimbursement.getReimbursementId());
         ResponseBean responseBean = new ResponseBean();
-        if (savedReimbursement != null) {
-            responseBean.setData(savedReimbursement);
-            if(savedReimbursement.getReimbursementCategory()=="Completed"){
-                emailSenderService.sendMail("your form is approved",reimbursement);
+        if (i != 0) {
+            Reimbursement savedReimbursement = reimbursementService.getReimbursementById(reimbursement.getReimbursementId());
+            responseBean.setData(reimbursement);
+            if(savedReimbursement!=null && savedReimbursement.getReimbursementCategory()=="Completed"){
+                emailSenderService.sendMail("your form is approved",savedReimbursement);
             }
             responseBean.setMessage("data saved successfully");
             responseBean.setStatus(HttpStatus.CREATED.toString());

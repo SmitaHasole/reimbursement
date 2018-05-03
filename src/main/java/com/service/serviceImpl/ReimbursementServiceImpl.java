@@ -47,7 +47,12 @@ public class ReimbursementServiceImpl implements ReimbursementService {
     }
 
     @Override
-    public Reimbursement updateStatus(String status, Long id) {
+    public int updateStatus(String status, Long id) {
         return reimbursementRepo.updateStatus(id,status);
+    }
+
+    @Override
+    public Reimbursement getReimbursementById(Long id) {
+        return reimbursementRepo.findByReimbursementId(id);
     }
 }

@@ -14,5 +14,6 @@ public interface ReimbursementService {
     public List<Reimbursement> getAll();
     public List<Reimbursement> getAllApprovedApplications();
     public List<Reimbursement> getAllCompletedApplications();
-    public Reimbursement updateStatus(String status, Long id);
+    public int updateStatus(String status, Long id);
+    public Reimbursement getReimbursementById(Long id);
  }

@@ -15,7 +15,7 @@ import java.util.List;
 
 public interface ReimbursementRepo extends JpaRepository<Reimbursement, Long> {
 
-    Reimbursement findByReimbursementId(String emailId);
+    Reimbursement findByReimbursementId(Long id);
 
     //    @Query("select e from Reimbursement e where e.status=Approved")
     List<Reimbursement> findByStatus(String status);
@@ -23,10 +23,10 @@ public interface ReimbursementRepo extends JpaRepository<Reimbursement, Long> {
     List<Reimbursement> findAll();
 
 
-    @Query("update Reimbursement u set u.status =status where u.reimbursementId =?1")
+    @Query("update Reimbursement u set u.status = ?2 where u.reimbursementId =?1")
     @Modifying
     @Transactional
-    Reimbursement updateStatus(Long id,String status);
+    int updateStatus(Long id,String status);
 //    @Query("update NewsFeed e set e.category=category where e.id=?1")
 //    @Modifying
 //    @Transactional
