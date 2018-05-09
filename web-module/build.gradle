@@ -1,0 +1,111 @@
+buildscript {
+    ext {
+        springBootVersion = '1.5.6.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath('com.moowork.gradle:gradle-node-plugin:1.2.0')
+        classpath "gradle.plugin.org.kravemir.gradle.sass:GradleSassPlugin:1.2.2"
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.5"
+        classpath "net.saliman:gradle-cobertura-plugin:2.5.1"
+    }
+}
+    group = 'reimbursement'
+
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'com.moowork.node'
+    apply plugin: 'groovy'
+    apply plugin: "org.kravemir.gradle.sass"
+    apply plugin: 'org.sonarqube'
+    apply plugin: "net.saliman.cobertura"
+
+    version = '0.0.1-SNAPSHOT'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    repositories {
+        mavenCentral()
+    }
+
+
+    ext {
+        springCloudVersion = 'Dalston.SR2'
+    }
+
+dependencies {
+    compile('org.springframework.cloud:spring-cloud-starter-sleuth')
+    compile('org.springframework.boot:spring-boot-starter-undertow')
+    compile('org.springframework.boot:spring-boot-starter-security')
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.16.8'
+    compile group: 'cglib', name: 'cglib', version: '3.2.5'
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('org.codehaus.groovy:groovy-all:2.4.10')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.4')
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+springBoot {
+    mainClass = 'com.reimbursement'
+    executable = true
+    buildInfo()
+}
+
+
+task cleanResources(type: Delete) {
+    //delete 'build/resources'
+}
+
+node {
+    version = "6.9.4"
+    download = true
+    nodeModulesDir = file("front-end")
+}
+
+task buildClientDev(type: NpmTask, dependsOn: 'npmInstall') {
+    group = 'build'
+    description = 'Compile client side folder for development'
+    args = ['run', 'buildDev']
+}
+
+task buildClient(type: NpmTask, dependsOn: 'npmInstall') {
+    group = 'build'
+    description = "Compile client side folder for production"
+    args = ['run', 'build']
+}
+task buildClientWatch(type: NpmTask, dependsOn: 'npmInstall') {
+    group = 'application'
+    description = "Build and watches the client side assets for rebuilding"
+    args = ['run', 'buildWatch']
+}
+
+sass {
+    main {
+        srcDir = file("$projectDir/src/main/resources/public/scss")
+        outDir = file("$projectDir/src/main/resources/public/css")
+    }
+}
+cobertura {
+    coverageFormats = ['html', 'xml']
+    coverageIgnoreTrivial = true
+    coverageIgnores = ['org.slf4j.Logger.*']
+    coverageReportDir = new File("$buildDir/reports/cobertura")
+}
+
+test.finalizedBy(project.tasks.cobertura)
+
+bootRun.dependsOn(buildClientDev)
+jar.dependsOn(buildClient)
+
+compileJava.dependsOn processResources
+processResources.dependsOn cleanResources, bootBuildInfo
+bootBuildInfo.mustRunAfter cleanResources

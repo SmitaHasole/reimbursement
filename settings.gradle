@@ -1,1 +1,5 @@
-rootProject.name = 'reimbursement utility'
+rootProject.name = 'reimbursement'
+
+include ':web-module'
+include ':api-module'
+
